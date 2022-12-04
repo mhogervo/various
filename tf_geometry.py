@@ -5,13 +5,11 @@ import matplotlib.pyplot as plt
 
 
 
-
 def plot_matrix(tens) -> None:
     """
     Given a matrix, return its plot.
     """
-    #plt.matshow(tens.numpy(), cmap = plt.get_cmap('gist_yarg'))
-    return None
+    plt.matshow(tens.numpy(), cmap = plt.get_cmap('gist_yarg'))
 
 def flat_metric(p: int, q: int=0) -> tf.Tensor:
     """
@@ -133,14 +131,16 @@ def AdS_metric_analytic(coords) -> tf.Tensor:
 
 #########
 
+print("------------\n")
 
-print("\nAn example for Euclidean AdS:\n")
+print("An example for Euclidean AdS:\n")
 #convention: dim refers to the manifold AdS_{dim+1}.
 dim = 4
 
+# draw some random coordinates:
 coords = tf.random.uniform((dim+1,), minval=-np.pi, maxval=np.pi, dtype='float64')
 
-g_tf = AdS_metric_tf(coords, check=True)
+g_tf = AdS_metric_tf(coords)
 print(f"The metric of a unit-radius AdS_{dim+1} computed using GradientTape is \n\n{g_tf}.")
 
 g_an = AdS_metric_analytic(coords)
@@ -154,16 +154,18 @@ print("\n------------\n")
 
 print("An example for the sphere:\n")
 #convention: dim refers to the manifold S^dim.
-dim = 6
+dim = 3
 
+# draw some random angles:
 angles = tf.random.uniform((dim,), minval=0, maxval=2*np.pi, dtype='float64')
 
-g_tf = sphere_metric_tf(angles, check=True)
+g_tf = sphere_metric_tf(angles)
 print(f"The metric of the unit sphere S^{dim} computed using GradientTape is \n\n{g_tf}.")
 
 g_an = sphere_metric_analytic(angles)
 eps = tf.reduce_sum(tf.square(g_tf-g_an))
 print(f"\nThe L^2 error between the exact and the numerical result is {eps}.")
 
+print("\n------------")
 # can use this to plot the metric:
 # [plot_matrix(g_tf)]
