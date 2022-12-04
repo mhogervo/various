@@ -11,10 +11,34 @@ def plot_matrix(tens) -> None:
     """
     plt.matshow(tens.numpy(), cmap = plt.get_cmap('gist_yarg'))
 
+
+
+
+#####
+
+def compute_metric_tf(coords, embedding, ambient_metric):
+    """
+    Given a set of coordinates x^\mu, an embedding X^A(x^\mu), and an ambient
+    metric \eta_{AB}, compute the projected metric numerically.
+    
+    Returns: (metric, jacobian, X^A).
+    """
+    
+    coords = tf.Variable(coords)
+    
+    with tf.GradientTape() as tape:
+        X = embedding(coords)
+        
+    jac = tape.jacobian(X, coords)
+    metric = tf.transpose(jac) @ ambient_metric @ jac
+
+    return metric, jac, X
+
 def flat_metric(p: int, q: int=0) -> tf.Tensor:
     """
     Return a flat metric of signature q times -1 + p times +1.
     """
+    
     diag = np.array(q * [-1] + p * [1], dtype='float64')
     return tf.linalg.diag(diag)
 
@@ -25,6 +49,7 @@ def sphere_embedding(angles) -> tf.Tensor:
     Given n angles (theta_1, theta_2, ..., phi), return the embedding into R^{n+1}
     of unit norm.
     """
+    
     n = angles.shape[0]
     if n == 1:
         phi = angles[0]
@@ -36,22 +61,21 @@ def sphere_embedding(angles) -> tf.Tensor:
 
 def sphere_metric_tf(angles, check=False):
     """
-    Given n angles x = (theta_1, theta_2, ..., phi), return the
+    Given n angles (theta_1, theta_2, ..., phi), return the
     metric g_{S^n} evaluated at the point x.
     If check = True, check that the gradient is orthogonal to X itself.
     """
-    angles = tf.Variable(angles)
-
-    with tf.GradientTape() as tape:
-        X = sphere_embedding(angles)
-    jac = tape.jacobian(X, angles)
+    
+    dim = angles.shape[0]
+    ambient_metric = flat_metric(dim+1)
+    
+    metric, jac, X = compute_metric_tf(angles, sphere_embedding, ambient_metric)
     
     if check:
         # this represents X.(grad X) - it should vanish since X.X = 1.
         T = tf.expand_dims(X, axis=0) @ jac 
         print(f"This should vanish: {tf.reduce_sum(tf.square(T))}.")
         
-    metric = tf.transpose(jac) @ jac
     return metric
 
 ##### Same, but for Euclidean AdS in global coordinates.
@@ -76,13 +100,11 @@ def AdS_metric_tf(coords, check=False):
     metric g_{AdS_{n}} evaluated at that point.
     If check = True, check that the gradient is orthogonal to X itself.
     """
-    coords = tf.Variable(coords)
-    with tf.GradientTape() as tape:
-        X = AdS_embedding(coords)
-    jac = tape.jacobian(X, coords)
 
-    n = coords.shape[0]
-    eta = flat_metric(n,1)
+    dim = coords.shape[0]
+    ambient_metric = flat_metric(dim, 1)
+
+    metric, jac, X = compute_metric_tf(coords, AdS_embedding, ambient_metric)
     
     if check:
         # this representats X.eta.(grad X), where eta is the embedding space metric. 
@@ -90,7 +112,6 @@ def AdS_metric_tf(coords, check=False):
         T = tf.expand_dims(X, axis=0) @ eta @ jac 
         print(f"This should vanish: {tf.reduce_sum(tf.square(T))}.")
         
-    metric = tf.transpose(jac) @ eta @ jac
     return metric
 
 #### Analytically computed metrics:
