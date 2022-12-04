@@ -4,16 +4,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def compute_metric_tf(in_coords, embedding, ambient_metric):
+def compute_metric_tf(coords, embedding, ambient_metric=None):
     """
     Given a set of coordinates x^mu, an embedding X^A(x^mu), and an ambient
     metric eta_{AB}, compute the projected metric numerically.
-    
+    If no ambient metric is specified, the standard Euclidean metric is used.
+
     Returns: (metric, jacobian, X^A).
     """
     
-    coords = tf.Variable(in_coords)
-    
+    coords = tf.Variable(coords)
+
+    if ambient_metric is None:
+        dim = coords.shape[0]
+        ambient_metric = flat_metric(dim+1)
+
     with tf.GradientTape() as tape:
         X = embedding(coords)
         
@@ -61,11 +66,8 @@ def sphere_metric_tf(angles, check=False):
     metric g_{S^n} evaluated at the point x.
     If check = True, check that the gradient is orthogonal to X itself.
     """
-    
-    dim = angles.shape[0]
-    amb_metric = flat_metric(dim+1)
-    
-    metric, jac, X = compute_metric_tf(angles, sphere_embedding, amb_metric)
+
+    metric, jac, X = compute_metric_tf(angles, sphere_embedding)
     
     if check:
         # this represents X.(grad X) - it should vanish since X.X = 1.
