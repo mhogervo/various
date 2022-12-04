@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 # import matplotlib.pyplot as plt
 
+
 def compute_metric_tf(coords, embedding, ambient_metric=None):
     """
     Given a set of coordinates x^mu, an embedding X^A(x^mu), and an ambient
@@ -41,7 +42,7 @@ def flat_metric(p: int, q: int = 0) -> tf.Tensor:
 #     plt.matshow(tens.numpy(), cmap=plt.get_cmap('gist_yarg'))
 
     
-def L2_error(g1, g2):
+def l2_error(g1, g2):
     return tf.reduce_sum(tf.square(g1 - g2))
 
 
@@ -79,11 +80,11 @@ class sphere:
         
         return metric
     
-    def metric_analytic(angles) -> tf.Tensor:
+    def metric_analytic(in_angles) -> tf.Tensor:
         """
         Given angles, compute the metric analytically.
         """
-        angles = list(angles.numpy())
+        angles = list(in_angles.numpy())
         angles.pop()  # remove the last angle, phi - doesn't contribute to the metric.
         x = 1.
         diag = [x]
@@ -137,11 +138,11 @@ class AdS:
         
         return metric
     
-    def metric_analytic(coords) -> tf.Tensor:
+    def metric_analytic(in_coords) -> tf.Tensor:
         """
         Given coordinates (rho, ...), compute the AdS metric analytically.
         """
-        coords = list(coords.numpy())
+        coords = list(in_coords.numpy())
         if len(coords) < 2:
             raise ValueError(f"Input is {len(coords)} coordinates, but we need to be in dimension >= 2.")
     
@@ -155,6 +156,7 @@ class AdS:
             diag.append(x)
         mat = tf.linalg.diag(diag)
         return tf.cast(mat, 'float64')
+
 
 class dS:
     """
@@ -198,11 +200,11 @@ class dS:
         
         return metric
     
-    def metric_analytic(coords) -> tf.Tensor:
+    def metric_analytic(in_coords) -> tf.Tensor:
         """
         Given coordinates (r, ...), compute the dS metric analytically.
         """
-        coords = list(coords.numpy())
+        coords = list(in_coords.numpy())
         if len(coords) < 2:
             raise ValueError(f"Input is {len(coords)} coordinates, but we need to be in dimension >= 2.")
     
@@ -220,7 +222,7 @@ class dS:
 ####################
 
 
-print("------------\n")
+print("\n------------\n")
 print("An example for Euclidean AdS:\n")
 # convention: dim refers to the manifold AdS_{dim+1}.
 dim_AdS = 4
@@ -232,7 +234,7 @@ g_tf = AdS.metric_tf(rand_coords, check=True)
 print(f"The metric of a unit-radius AdS_{dim_AdS + 1} computed using GradientTape is \n\n{g_tf}.")
 
 g_an = AdS.metric_analytic(rand_coords)
-eps = L2_error(g_tf, g_an)
+eps = l2_error(g_tf, g_an)
 print(f"\nThe L^2 error between the exact and the numerical result is {eps}.")
 
 ####################
@@ -250,7 +252,7 @@ g_tf = dS.metric_tf(rand_coords, check=True)
 print(f"The metric of a unit-radius dS_{dim_dS + 1} computed using GradientTape is \n\n{g_tf}.")
 
 g_an = dS.metric_analytic(rand_coords)
-eps = L2_error(g_tf, g_an)
+eps = l2_error(g_tf, g_an)
 print(f"\nThe L^2 error between the exact and the numerical result is {eps}.")
 
 print("\n------------\n")
@@ -268,7 +270,7 @@ g_tf = sphere.metric_tf(rand_angles, check=True)
 print(f"The metric of the unit sphere S^{dim_sphere} computed using GradientTape is \n\n{g_tf}.")
 
 g_an = sphere.metric_analytic(rand_angles)
-eps = L2_error(g_tf, g_an)
+eps = l2_error(g_tf, g_an)
 print(f"\nThe L^2 error between the exact and the numerical result is {eps}.")
 
 print("\n------------")
