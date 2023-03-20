@@ -6,8 +6,6 @@
 #include <map>
 #include <stdlib.h> 
 
-// double gamma_moments(int, double, double);
-
 typedef std::map<std::string, double> parameterSet;
 typedef std::pair<double, double> doublePair;
 
@@ -19,6 +17,9 @@ doublePair stats_VG(parameterSet);
 
 doublePair stats_from_sample(const std::vector<double>&);
 void print_stats(const doublePair, const doublePair);
+
+// not in use currently:
+double gamma_moments(int, double, double);
 
 int main()
 {
