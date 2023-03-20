@@ -23,14 +23,17 @@ double gamma_moments(int, double, double);
 
 int main()
 {
-    int my_seed = 2023;
+    int my_seed = 8732;
     int num_samples = 2e4;
-    int n_steps = 150; // steps for every single walk; total calls to the RNG is num_samples * n_steps.
+    int n_steps = 100; // steps for every single walk; total calls to the RNG is O(1) * num_samples * n_steps
+    // where O(1) is the number of calls at every timestep.
 
+    // initiate the RNG with a fixed seed (set above)
     std::seed_seq seed_seq{my_seed};
     std::mt19937_64 rng(seed_seq);
     // std::ranlux is 'better' but slower. std::ranlux48 is *really* slow.
     // std::ranlux24 rng(seed_seq);
+    // std::ranlux48 rng(seed_seq);
     // Mersenne is faster and still acceptable. The _64 version is slightly better.
     // std::mt19937 rng(seed_seq);
 
@@ -39,8 +42,8 @@ int main()
     parameterSet brownianParams = {{"sigma", 0.3}, {"mu", 1}, {"S0", 100}, {"T", 0.7}};
     std::vector<double> sample_list = {};
     for (int i=0; i<num_samples; i++) {
-        auto sim = simulate_GBM(brownianParams, n_steps, rng);
-        sample_list.push_back(sim.back());
+        auto sim = simulate_GBM(brownianParams, n_steps, rng); 
+        sample_list.push_back(sim.back()); // record only the last value, S_T
     }
     // extract statistics and compare to analytics:
     doublePair sample_stats = stats_from_sample(sample_list);
@@ -217,7 +220,8 @@ void print_stats(const doublePair stats_th, const doublePair stats_sample) {
     /* Given two pairs of (mu, sigma) in theory and for a sample, print the comparison. */
     double mu_est = stats_sample.first, sigma_est = stats_sample.second;
     double mu_th = stats_th.first, sigma_th = stats_th.second;
-    std::cout << mu_th << "\t" << mu_est << "\n" << sigma_th << "\t" << sigma_est << "\n" << std::endl;
+    std::cout << "\ttheory\tsample" << std::endl;
+    std::cout << "mu\t" << mu_th << "\t" << mu_est << "\nsigma\t" << sigma_th << "\t" << sigma_est << "\n" << std::endl;
 }
 
 
