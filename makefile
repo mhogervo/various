@@ -1,5 +1,5 @@
-CC=c++
-CFLAGS=-c -Wall -std=c++20
+CC=g++
+CFLAGS=-c -Wall -std=c++17 -O2
 LFLAGS=
 
 all: rand
