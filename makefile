@@ -1,4 +1,4 @@
-CC=g++
+CC=c++
 CFLAGS=-c -std=c++17 -O2 -Wall -Wextra -Wunused -pedantic
 LFLAGS=-Wl
 
