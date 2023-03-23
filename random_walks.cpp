@@ -1,5 +1,6 @@
 #include "random_walks.h"
 #include <set>
+#include <iostream>
 
 // ---------------------------------
 // A class for MC runs; see random_walks.h for more info.
@@ -26,6 +27,15 @@ MCrun::MCrun(std::string modelName, const parameterSet& modelParameters, int tim
     else {
         throw std::runtime_error("Error: model name isn't recognized.");
     }
+}
+
+void MCrun::printParameters() {
+    // print the specifications of this run
+    std::cout << "Model parameters for this Monte Carlo run (of " << modelName << ") are as follows:\n";
+    for ( const auto &p : modelParameters ) {
+        std::cout << p.first << ":\t" << p.second << std::endl;
+    }
+    std::cout << "Doing " << num_runs << " runs, with " << timesteps << " timesteps each.\n" << std::endl;
 }
 
 std::vector<double> MCrun::fetchClosingPrices() {

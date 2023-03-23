@@ -6,12 +6,13 @@
 
 using rngClass = std::mt19937_64;
 
-// Lüscher's ranlux is the gold standard, but it's slower. std::ranlux48 is really slow.
-//    std::ranlux24 rng(seed_seq);
-//    std::ranlux48 rng(seed_seq);
+// Lüscher's ranlux is the gold standard, but it's slow. std::ranlux48 is *really* slow.
+//    std::ranlux24;
+//    std::ranlux48;
 
 // Mersenne is faster and still acceptable. The _64 version is slightly better.
-//    std::mt19937 rng(seed_seq);
+//    std::mt19937;
+//    std::mt19937_64;
 
 
 using parameterSet = std::map<std::string, double>;
@@ -39,14 +40,14 @@ public:
         // Return the j-th run; note that we must have 0<j<num_runs;
         return simulations[j];
     }
-    
-private:
-    std::vector<std::vector<double>> simulations; // stores the samples
 
+    void printParameters();
+    
+    std::vector<std::vector<double>> simulations; // stores the samples
     std::string modelName;
     parameterSet modelParameters;
     int timesteps, num_runs;
-    
+private:
     rngClass rng; // contains a pre-defined RNG, passed by reference.
 };
 
