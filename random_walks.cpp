@@ -2,22 +2,22 @@
 #include <set>
 
 // ---------------------------------
-// A class for MC runs
+// A class for MC runs; see random_walks.h for more info.
 // ---------------------------------
 
 MCrun::MCrun(std::string modelName, const parameterSet& modelParameters, int timesteps, int num_runs, rngClass& rng) :
     modelName(modelName), modelParameters(modelParameters), timesteps(timesteps), num_runs(num_runs), rng(rng) {
     
     simulations.reserve(num_runs);
+    check_parameter_set(modelName, modelParameters);
+    
     if (modelName == "GBM") {
-        check_GBM_params(modelParameters);
         for (int i=0; i<num_runs; i++) {
             auto sim = simulate_GBM(modelParameters, timesteps, rng);
             simulations.push_back(sim);
         }
     }
     else if (modelName == "VG") {
-        check_VG_params(modelParameters);
         for (int i=0; i<num_runs; i++) {
             auto sim = simulate_VG(modelParameters, timesteps, rng);
             simulations.push_back(sim);
@@ -39,25 +39,38 @@ std::vector<double> MCrun::fetchClosingPrices() {
     return closingPrices;
 }
 
-// ---------------------------------
-// Functions for Geometric Brownian Motion.
-// ---------------------------------
 
-bool check_GBM_params(const parameterSet& p) {
-    /* Take a parameterSet and check if it contains all parameter for the GBM process. */
-    std::set<std::string> tokens {"mu", "sigma", "S0", "T"};
+bool check_parameter_set(std::string modelName, const parameterSet& p) {
+    /* Take a parameterSet and check if it contains all parameters for the GBM or VG processes. */
+    
+    std::set<std::string> tokens;
+    if (modelName == "GBM") {
+        tokens = {"mu", "sigma", "S0", "T"};
+    }
+    else if (modelName == "VG") {
+        tokens = {"theta", "sigma", "nu", "S0", "T"};
+    }
+    else {
+        throw std::runtime_error("Error: model name isn't recognized.");
+    }
+    
     for (const auto& s : tokens) {
         if (p.count(s) == 0) return false;
     }
     return true;
 }
 
+// ---------------------------------
+// Functions for Geometric Brownian Motion.
+// ---------------------------------
+
+
 doublePair stats_GBM(const parameterSet& params) {
     /* Given a set of parameters for the GBM, compute the expected mean and standard deviation,
        returned as a pair.
     */
     double mu, sigma, S0, T;
-    if (check_GBM_params(params)) {
+    if (check_parameter_set("GBM", params)) {
         sigma = params.at("sigma");
         mu = params.at("mu");
         S0 = params.at("S0");
@@ -83,7 +96,7 @@ std::vector<double> simulate_GBM(const parameterSet& params, int N, rngClass& rn
     std::vector<double> samples(N+1);
     
     double mu, sigma, S0, T, dt;
-    if (check_GBM_params(params)) {
+    if (check_parameter_set("GBM", params)) {
         sigma = params.at("sigma");
         mu = params.at("mu");
         S0 = params.at("S0");
@@ -111,21 +124,12 @@ std::vector<double> simulate_GBM(const parameterSet& params, int N, rngClass& rn
 // Functions for the Variance-Gamma process.
 // ---------------------------------
 
-bool check_VG_params(const parameterSet& p) {
-    /* Take a parameterSet and check if it contains all parameter for the VG process. */
-    std::set<std::string> tokens {"theta", "sigma", "nu", "S0", "T"};
-    for (const auto& s : tokens) {
-        if (p.count(s) == 0) return false;
-    }
-    return true;
-}
-
 doublePair stats_VG(const parameterSet& params) {
     /* Given a set of parameters for the VG process, compute the expected mean and standard deviation,
        returned as a pair.
     */
     double theta, sigma, nu, S0, T;
-    if (check_VG_params(params)) {
+    if (check_parameter_set("VG", params)) {
         theta = params.at("theta");
         sigma = params.at("sigma");
         nu = params.at("nu");
@@ -155,7 +159,7 @@ std::vector<double> simulate_VG(const parameterSet& params, int N, rngClass& rng
     std::vector<double> samples(N+1);
     
     double theta, sigma, nu, S0, T, dt;
-    if (check_VG_params(params)) {
+    if (check_parameter_set("VG", params)) {
         theta = params.at("theta");
         sigma = params.at("sigma");
         nu = params.at("nu");

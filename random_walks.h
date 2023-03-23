@@ -1,30 +1,35 @@
 #ifndef RANDOM_WALKS_H
 #define RANDOM_WALKS_H
 
-#include <map>
 #include <random>
-
-/*
-Lüscher's ranlux is the gold standard, but it's slower. std::ranlux48 is *really* slow.
-// std::ranlux24 rng(seed_seq);
-// std::ranlux48 rng(seed_seq);
-Mersenne is faster and still acceptable. The _64 version is slightly better.
-// std::mt19937 rng(seed_seq);
-*/
+#include <map>
 
 using rngClass = std::mt19937_64;
+
+// Lüscher's ranlux is the gold standard, but it's slower. std::ranlux48 is really slow.
+//    std::ranlux24 rng(seed_seq);
+//    std::ranlux48 rng(seed_seq);
+
+// Mersenne is faster and still acceptable. The _64 version is slightly better.
+//    std::mt19937 rng(seed_seq);
+
+
 using parameterSet = std::map<std::string, double>;
 using doublePair =  std::pair<double, double>;
 
-bool check_GBM_params(const parameterSet&);
 std::vector<double> simulate_GBM(const parameterSet&, int, rngClass&);
 doublePair stats_GBM(const parameterSet&);
 
-bool check_VG_params(const parameterSet&);
 std::vector<double> simulate_VG(const parameterSet&, int, rngClass&);
 doublePair stats_VG(const parameterSet&);
 
+bool check_parameter_set(std::string, const parameterSet&);
+
 class MCrun {
+    /*
+      This is a class that that a set of parameters and performs multiple Monte Carlo simulations at once.
+      It can return individual runs or the collection of all closing prices.
+    */
 public:
     MCrun(std::string, const parameterSet&, int, int, rngClass&);
 
@@ -36,12 +41,13 @@ public:
     }
     
 private:
-    std::vector<std::vector<double>> simulations;
+    std::vector<std::vector<double>> simulations; // stores the samples
 
     std::string modelName;
     parameterSet modelParameters;
     int timesteps, num_runs;
-    rngClass rng;
+    
+    rngClass rng; // contains a pre-defined RNG, passed by reference.
 };
 
 
