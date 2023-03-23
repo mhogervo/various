@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <set>
 
-typedef std::map<std::string, double> parameterSet;
-typedef std::pair<double, double> doublePair;
+using parameterSet = std::map<std::string, double>;
+using doublePair =  std::pair<double, double>;
 
 bool check_GBM_params(const parameterSet&);
 std::vector<double> simulate_GBM(const parameterSet&, int, std::mt19937_64&);
@@ -89,18 +89,19 @@ doublePair stats_from_sample(const std::vector<double> & v) {
      */
     
     int n = v.size();
-    double av(0), std(0);
+    double av(0), std_dev(0);
     
     for (int i=0; i<n; i++) av += v[i];
     av /= n;
     
-    for (int i=0; i<n; i++) std += pow(v[i] - av, 2);
-    std /= (n-1);
-    std = sqrt(std);
+    for (int i=0; i<n; i++) std_dev += pow(v[i] - av, 2);
+    std_dev /= (n-1);
+    std_dev = sqrt(std_dev);
     
-    std::pair<double, double> out(av, std);
+    auto out = std::make_pair(av, std_dev);
     return out;
 }
+
 
 bool check_GBM_params(const parameterSet& p) {
     /* Take a parameterSet and check if it contains all parameter for the GBM process. */
