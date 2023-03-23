@@ -1,8 +1,49 @@
 #include "random_walks.h"
 #include <set>
 
-bool check_GBM_params(const
-                      parameterSet& p) {
+// ---------------------------------
+// A class for MC runs
+// ---------------------------------
+
+MCrun::MCrun(std::string modelName, parameterSet modelParameters, int timesteps, int num_runs, rngClass rng) :
+    modelName(modelName), modelParameters(modelParameters), timesteps(timesteps), num_runs(num_runs), rng(rng) {
+    
+    simulations.reserve(num_runs);
+    if (modelName == "GBM") {
+        check_GBM_params(modelParameters);
+        for (int i=0; i<num_runs; i++) {
+            auto sim = simulate_GBM(modelParameters, timesteps, rng);
+            simulations.push_back(sim);
+        }
+    }
+    else if (modelName == "VG") {
+        check_VG_params(modelParameters);
+        for (int i=0; i<num_runs; i++) {
+            auto sim = simulate_VG(modelParameters, timesteps, rng);
+            simulations.push_back(sim);
+        }
+    }
+    else {
+        throw std::runtime_error("Error: model name isn't recognized.");
+    }
+}
+
+std::vector<double> MCrun::fetchClosingPrices() {
+    // Return a vector with all closing prices.
+    std::vector<double> closingPrices;
+    closingPrices.reserve(num_runs);
+    
+    for (int i=0; i<num_runs; i++) {
+        closingPrices.push_back(simulations[i].back());
+    }
+    return closingPrices;
+}
+
+// ---------------------------------
+// Functions for Geometric Brownian Motion.
+// ---------------------------------
+
+bool check_GBM_params(const parameterSet& p) {
     /* Take a parameterSet and check if it contains all parameter for the GBM process. */
     std::set<std::string> tokens {"mu", "sigma", "S0", "T"};
     for (const auto& s : tokens) {
@@ -25,7 +66,6 @@ doublePair stats_GBM(const parameterSet& params) {
     else {
         throw std::runtime_error("Error: parameter set for the GBM process is not complete.");
     }
-
     double mean = S0*exp(mu*T);
     double std_dev = mean * sqrt( exp(pow(sigma,2)*T) - 1 );
 
@@ -33,7 +73,7 @@ doublePair stats_GBM(const parameterSet& params) {
     return out;    
 }
 
-std::vector<double> simulate_GBM(const parameterSet& params, int N, std::mt19937_64& rng) {
+std::vector<double> simulate_GBM(const parameterSet& params, int N, rngClass& rng) {
     /** Simulate a geometric Brownian motion. The map params should contain {mu, sigma, T, S0}.
         N is the number of steps.
 
@@ -66,6 +106,10 @@ std::vector<double> simulate_GBM(const parameterSet& params, int N, std::mt19937
     
     return samples;
 }
+
+// ---------------------------------
+// Functions for the Variance-Gamma process.
+// ---------------------------------
 
 bool check_VG_params(const parameterSet& p) {
     /* Take a parameterSet and check if it contains all parameter for the VG process. */
@@ -100,7 +144,7 @@ doublePair stats_VG(const parameterSet& params) {
 }
 
 
-std::vector<double> simulate_VG(const parameterSet& params, int N, std::mt19937_64& rng) {
+std::vector<double> simulate_VG(const parameterSet& params, int N, rngClass& rng) {
     /** Simulate a variance-gamma process with parameters {theta, sigma, nu}.
         The map params should also contain S0 and the total time T.
         N is the number of steps, such that dt = T/N.

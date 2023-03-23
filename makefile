@@ -1,6 +1,6 @@
 CC=g++
-CFLAGS=-c -Wall -std=c++17 -O2
-LFLAGS=
+CFLAGS=-c -std=c++17 -O2 -Wall -Wextra -Wunused -pedantic
+LFLAGS=-Wl
 
 all: rand
 
@@ -14,4 +14,4 @@ random_walks.o: random_walks.cpp random_walks.h
 	$(CC) $(CFLAGS) random_walks.cpp
 
 clean:
-	rm -rf *.o *.h~ rand
+	rm -rf *.o *.h~ *.cpp~ rand

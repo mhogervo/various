@@ -1,42 +1,34 @@
 #include <iostream>
-#include <math.h>
-#include <string>
 #include "random_walks.h"
 
-// using doublePair = std::pair<double, double> defined in random_walks.h
+/* defined in random_walks.h:
+   
+using rngClass = std::mt19937_64;
+using parameterSet = std::map<std::string, double>;
+using doublePair =  std::pair<double, double>;
+
+*/
 
 doublePair stats_from_sample(const std::vector<double>&);
 void print_stats(const doublePair, const doublePair);
 
-// not in use currently:
-double gamma_moments(int, double, double);
-
 int main()
 {
-    int my_seed = 8732;
+    int my_seed = 2023;
     int num_samples = 2e4;
     int n_steps = 100; // steps for every single walk; total calls to the RNG is O(1) * num_samples * n_steps
     // where O(1) is the number of calls at every timestep.
 
     // initiate the RNG with a fixed seed (set above)
     std::seed_seq seed_seq {my_seed};
-    std::mt19937_64 rng(seed_seq);
-    // std::ranlux is 'better' but slower. std::ranlux48 is *really* slow.
-    // std::ranlux24 rng(seed_seq);
-    // std::ranlux48 rng(seed_seq);
-    // Mersenne is faster and still acceptable. The _64 version is slightly better.
-    // std::mt19937 rng(seed_seq);
+    rngClass rng(seed_seq);
 
     // I: Simulate num_samples different geometric Brownian motions with specified parameters.
-   
-    parameterSet brownianParams {{"sigma", 0.3}, {"mu", 1}, {"S0", 100}, {"T", 0.7}};
-    std::vector<double> sample_list;
-    sample_list.reserve(num_samples);
     
-    for (int i=0; i<num_samples; i++) {
-        auto sim = simulate_GBM(brownianParams, n_steps, rng); 
-        sample_list.push_back(sim.back()); // record only the last value, S_T
-    }
+    parameterSet brownianParams {{"sigma", 0.3}, {"mu", 1}, {"S0", 100}, {"T", 0.7}};
+    MCrun GBM_run("GBM", brownianParams, n_steps, num_samples, rng);
+    std::vector<double> sample_list = GBM_run.fetchClosingPrices();
+    
     // extract statistics and compare to analytics:
     doublePair sample_stats = stats_from_sample(sample_list);
     doublePair stats_th = stats_GBM(brownianParams);
@@ -48,15 +40,10 @@ int main()
     
     // II: Simulate num_samples different VG processes with specified parameters.
     
-    parameterSet VGParams {{"theta", -1.2}, {"sigma", 2.4}, {"nu", 0.7}, {"S0", 30.}, {"T", 0.4}};
+    parameterSet VGParams {{"theta", -1.2}, {"sigma", 2.4}, {"nu", 0.7}, {"S0", 30.}, {"T", 8}};
+    MCrun VG_run("VG", VGParams, n_steps, num_samples, rng);
+    sample_list = VG_run.fetchClosingPrices();
     
-    sample_list.clear();
-    sample_list.reserve(num_samples);
-    
-    for (int i=0; i<num_samples; i++) {
-        auto sim = simulate_VG(VGParams, n_steps, rng);
-        sample_list.push_back(sim.back());
-    }
     sample_stats = stats_from_sample(sample_list);
     stats_th = stats_VG(VGParams);
     
@@ -99,22 +86,7 @@ void print_stats(const doublePair stats_th, const doublePair stats_sample) {
     /* Given two pairs of (mu, sigma) in theory and for a sample, print the comparison. */
     double mu_est = stats_sample.first, sigma_est = stats_sample.second;
     double mu_th = stats_th.first, sigma_th = stats_th.second;
-    std::cout << "\ttheory\tsample" << std::endl;
-    std::cout << "mu\t" << mu_th << "\t" << mu_est << "\nsigma\t" << sigma_th << "\t" << sigma_est << "\n" << std::endl;
-}
-
-
-double gamma_moments(int n, double alpha=1.0, double beta=1.0) {
-    /**
-       Return the n-th moment of the gamma distribution:
-       
-           (alpha)_n * beta^n
-       
-       where (x)_n = x(x+1)...(x+n-1) is the Pochhammer symbol.
-    */
-    
-    double out = 1;
-    for (int i=0; i<n; i++) out *= alpha + i;
-    out *= pow(beta,n);
-    return out;
+    std::cout << "\t\t(theory, sample)" << std::endl;
+    std::cout << "mu\t(" << mu_th << ", " << mu_est << ")" << std::endl;
+    std::cout << "sigma\t(" << sigma_th << ", " << sigma_est << ").\n" << std::endl;
 }
