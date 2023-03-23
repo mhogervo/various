@@ -5,7 +5,7 @@
 // A class for MC runs
 // ---------------------------------
 
-MCrun::MCrun(std::string modelName, parameterSet modelParameters, int timesteps, int num_runs, rngClass rng) :
+MCrun::MCrun(std::string modelName, const parameterSet& modelParameters, int timesteps, int num_runs, rngClass& rng) :
     modelName(modelName), modelParameters(modelParameters), timesteps(timesteps), num_runs(num_runs), rng(rng) {
     
     simulations.reserve(num_runs);

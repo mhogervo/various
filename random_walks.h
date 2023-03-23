@@ -26,7 +26,7 @@ doublePair stats_VG(const parameterSet&);
 
 class MCrun {
 public:
-    MCrun(std::string, parameterSet, int, int, rngClass);
+    MCrun(std::string, const parameterSet&, int, int, rngClass&);
 
     std::vector<double> fetchClosingPrices();
 
