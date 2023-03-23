@@ -93,13 +93,14 @@ std::vector<double> simulate_GBM(const parameterSet& params, int N, rngClass& rn
         Output: a vector of N+1 doubles v[0] = S_0, ..., v[N] = S_T.
     */
     
-    std::vector<double> samples(N+1);
+    std::vector<double> samples;
+    samples.reserve(N+1);
     
-    double mu, sigma, S0, T, dt;
+    double mu, sigma, S, T, dt;
     if (check_parameter_set("GBM", params)) {
         sigma = params.at("sigma");
         mu = params.at("mu");
-        S0 = params.at("S0");
+        S = params.at("S0");
         T = params.at("T");
         dt = T/N;
     }
@@ -110,11 +111,10 @@ std::vector<double> simulate_GBM(const parameterSet& params, int N, rngClass& rn
     double mu_bar = (mu - 0.5*pow(sigma,2))*dt, sigma_bar = sigma*sqrt(dt);
     std::normal_distribution Wiener(mu_bar, sigma_bar);
     
-    double S = S0;
     samples[0] = S;
     for (int i=1; i<=N; i++) {
         S *= exp(Wiener(rng));
-        samples[i] = S;
+        samples.push_back(S);
     }
     
     return samples;
@@ -156,14 +156,15 @@ std::vector<double> simulate_VG(const parameterSet& params, int N, rngClass& rng
         Output: a vector of N+1 doubles v[0] = S_0, ..., v[N] = S_T.
     */
     
-    std::vector<double> samples(N+1);
+    std::vector<double> samples;
+    samples.reserve(N+1);
     
-    double theta, sigma, nu, S0, T, dt;
+    double theta, sigma, nu, S, T, dt;
     if (check_parameter_set("VG", params)) {
         theta = params.at("theta");
         sigma = params.at("sigma");
         nu = params.at("nu");
-        S0 = params.at("S0");
+        S = params.at("S0");
         T = params.at("T");
         dt = T/N;
     }
@@ -173,13 +174,12 @@ std::vector<double> simulate_VG(const parameterSet& params, int N, rngClass& rng
     
     std::gamma_distribution gamma_distr(dt/nu, nu);
     std::normal_distribution Wiener;
-    
-    double S = S0;
+
     samples[0] = S;
     for (int i=1; i<=N; i++) {
         double dG = gamma_distr(rng), Z = Wiener(rng);
         S += theta*dG + sigma*sqrt(dG)*Z;
-        samples[i] = S;
+        samples.push_back(S);
     }
     
     return samples;
