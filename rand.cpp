@@ -16,38 +16,41 @@ int main()
 {
     int my_seed = 2023;
     int num_samples = 2e4;
-    int n_steps = 100; // steps for every single walk; total calls to the RNG is O(1) * num_samples * n_steps
-    // where O(1) is the number of calls at every timestep.
+    int n_steps = 100;      // steps for every single walk; total calls to the RNG is O(1) * num_samples * n_steps
+                            // where O(1) is the number of calls at every timestep.
 
     // initiate the RNG with a fixed seed (set above)
     std::seed_seq seed_seq {my_seed};
     rngClass rng(seed_seq);
 
+    
     // I: Simulate num_samples different geometric Brownian motions with specified parameters.
     
     parameterSet brownianParams {{"sigma", 0.3}, {"mu", 1}, {"S0", 100}, {"T", 0.7}};
     MCrun GBM_run("GBM", brownianParams, n_steps, num_samples, rng);
+    GBM_run.printParameters();
     std::vector<double> sample_list = GBM_run.fetchClosingPrices();
-    
+   
     // extract statistics and compare to analytics:
     doublePair sample_stats = stats_from_sample(sample_list);
     doublePair stats_th = stats_GBM(brownianParams);
     
-    std::cout << "\nComparing sample mean and standard deviation (GBM), over " << num_samples << " realizations:" << std::endl;
+    std::cout << "Comparing sample mean and standard deviation (GBM):" << std::endl;
     print_stats(stats_th, sample_stats);
 
-    // -------------------------------------------
+    std::cout << "-------------\n" << std::endl;
     
     // II: Simulate num_samples different VG processes with specified parameters.
     
     parameterSet VGParams {{"theta", -1.2}, {"sigma", 2.4}, {"nu", 0.7}, {"S0", 30.}, {"T", 8}};
     MCrun VG_run("VG", VGParams, n_steps, num_samples, rng);
+    VG_run.printParameters();
     sample_list = VG_run.fetchClosingPrices();
     
     sample_stats = stats_from_sample(sample_list);
     stats_th = stats_VG(VGParams);
     
-    std::cout << "Comparing sample mean and standard deviation (VG), over " << num_samples << " realizations:" << std::endl;
+    std::cout << "Comparing sample mean and standard deviation (VG):" << std::endl;
     print_stats(stats_th, sample_stats);
     
 }
