@@ -41,6 +41,7 @@ std::vector<double> simulate_GBM(const parameterSet& params, int N, std::mt19937
     */
     
     std::vector<double> samples(N+1);
+    
     double mu, sigma, S0, T, dt;
     if (check_GBM_params(params)) {
         sigma = params.at("sigma");
@@ -108,6 +109,7 @@ std::vector<double> simulate_VG(const parameterSet& params, int N, std::mt19937_
     */
     
     std::vector<double> samples(N+1);
+    
     double theta, sigma, nu, S0, T, dt;
     if (check_VG_params(params)) {
         theta = params.at("theta");

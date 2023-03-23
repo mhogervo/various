@@ -30,7 +30,9 @@ int main()
     // I: Simulate num_samples different geometric Brownian motions with specified parameters.
    
     parameterSet brownianParams {{"sigma", 0.3}, {"mu", 1}, {"S0", 100}, {"T", 0.7}};
-    std::vector<double> sample_list = {};
+    std::vector<double> sample_list;
+    sample_list.reserve(num_samples);
+    
     for (int i=0; i<num_samples; i++) {
         auto sim = simulate_GBM(brownianParams, n_steps, rng); 
         sample_list.push_back(sim.back()); // record only the last value, S_T
@@ -47,7 +49,10 @@ int main()
     // II: Simulate num_samples different VG processes with specified parameters.
     
     parameterSet VGParams {{"theta", -1.2}, {"sigma", 2.4}, {"nu", 0.7}, {"S0", 30.}, {"T", 0.4}};
-    sample_list = {};
+    
+    sample_list.clear();
+    sample_list.reserve(num_samples);
+    
     for (int i=0; i<num_samples; i++) {
         auto sim = simulate_VG(VGParams, n_steps, rng);
         sample_list.push_back(sim.back());
